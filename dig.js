@@ -46,7 +46,7 @@ function loadGmailApi() {
 
 
 function displayInbox() {
-  console.log('loadGmailApi');
+  console.log('displayInbox');
   var request = gapi.client.gmail.users.messages.list({
     'userId': 'me',
     'labelIds': 'INBOX',
@@ -64,3 +64,25 @@ function displayInbox() {
     });
   });
 }
+
+
+function appendMessageRow(message) {
+  $('.table-inbox tbody').append(
+    '<tr>\
+      <td>'+getHeader(message.payload.headers, 'From')+'</td>\
+      <td>'+getHeader(message.payload.headers, 'Subject')+'</td>\
+      <td>'+getHeader(message.payload.headers, 'Date')+'</td>\
+    </tr>'
+  );
+}
+
+
+function getHeader(headers, index) {
+   var header = '';
+   $.each(headers, function(){
+     if(this.name === index){
+       header = this.value;
+     }
+   });
+   return header;
+ }

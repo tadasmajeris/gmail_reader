@@ -1,4 +1,6 @@
-var scopes = 'https://www.googleapis.com/auth/gmail.readonly';
+var scopes = 'https://www.googleapis.com/auth/gmail.modify';
+var _messages = [];
+var _subjects = [];
 
 function handleClientLoad() {
   console.log('handleClientLoad');
@@ -41,28 +43,74 @@ function handleAuthResult(authResult) {
 
 function loadGmailApi() {
   console.log('loadGmailApi');
-  gapi.client.load('gmail', 'v1', displayInbox);
+  gapi.client.load('gmail', 'v1', ()=>{
+    loadMessages('me', 'from:subscriptions', onMessagesLoad);
+  });
 }
 
 
-function displayInbox() {
-  console.log('displayInbox');
-  var request = gapi.client.gmail.users.messages.list({
-    'userId': 'me',
-    'labelIds': 'INBOX',
-    'maxResults': 10
-  });
+function onMessagesLoad(loadedMessages) {
+  console.log('onMessagesLoad', loadedMessages.length);
+  _messages = loadedMessages.slice(0, 10);
 
-  request.execute(function(response) {
-    $.each(response.messages, function() {
-      var messageRequest = gapi.client.gmail.users.messages.get({
-        'userId': 'me',
-        'id': this.id
-      });
-
-      messageRequest.execute(appendMessageRow);
+  $.each(_messages, function() {
+    var messageRequest = gapi.client.gmail.users.messages.get({
+      'userId': 'me',
+      'id': this.id,
     });
+
+    messageRequest.execute(onMessageLoad);
   });
+}
+
+
+function onMessageLoad(message) {
+  /* console.log(message); */
+  let headers = message.payload.headers;
+  let subject = headers.find(h => h.name == 'Subject').value;
+
+  if (!_subjects.includes(subject)) {
+    _subjects.push(subject);
+
+  } else { // trash the duplicate email
+    var messageRequest = gapi.client.gmail.users.messages.trash({
+      'userId': 'me',
+      'id': message.id
+    });
+    messageRequest.execute(r=>{
+      if (!('error' in r)) {
+        $.each(_messages, function(i, el){
+          if (this.id == message.id) _messages.splice(i, 1);
+        });
+      }
+    });
+  }
+  console.log(_messages);
+}
+
+
+function loadMessages(userId, query, callback) {
+  var getPageOfMessages = function(request, result) {
+    request.execute(function(resp) {
+      result = result.concat(resp.messages);
+      var nextPageToken = resp.nextPageToken;
+      if (nextPageToken) {
+        request = gapi.client.gmail.users.messages.list({
+          'userId': userId,
+          'pageToken': nextPageToken,
+          'q': query
+        });
+        getPageOfMessages(request, result);
+      } else {
+        callback(result);
+      }
+    });
+  };
+  var initialRequest = gapi.client.gmail.users.messages.list({
+    'userId': userId,
+    'q': query
+  });
+  getPageOfMessages(initialRequest, []);
 }
 
 

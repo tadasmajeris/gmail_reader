@@ -51,7 +51,8 @@ function loadGmailApi() {
 
 function onMessagesLoad(loadedMessages) {
   console.log('onMessagesLoad', loadedMessages.length);
-  _messages = loadedMessages.slice(0, 10);
+  _messages = loadedMessages.slice(0,100);
+  /* _messages = loadedMessages; */
 
   $.each(_messages, function() {
     var messageRequest = gapi.client.gmail.users.messages.get({
@@ -71,21 +72,27 @@ function onMessageLoad(message) {
 
   if (!_subjects.includes(subject)) {
     _subjects.push(subject);
-
-  } else { // trash the duplicate email
-    var messageRequest = gapi.client.gmail.users.messages.trash({
-      'userId': 'me',
-      'id': message.id
-    });
-    messageRequest.execute(r=>{
-      if (!('error' in r)) {
-        $.each(_messages, function(i, el){
-          if (this.id == message.id) _messages.splice(i, 1);
-        });
-      }
-    });
+    appendMessageRow(message, subject);
+  } else {
+    trashDuplicate(message, subject);
   }
-  console.log(_messages);
+}
+
+
+function trashDuplicate(message, subject) {
+  var messageRequest = gapi.client.gmail.users.messages.trash({
+    'userId': 'me',
+    'id': message.id
+  });
+
+  messageRequest.execute(r=>{
+    if (!('error' in r)) {
+      $.each(_messages, function(i, el){
+        if (this.id == message.id) _messages.splice(i, 1);
+      });
+      console.log('deleted: ', subject);
+    }
+  });
 }
 
 
@@ -114,14 +121,13 @@ function loadMessages(userId, query, callback) {
 }
 
 
-function appendMessageRow(message) {
+function appendMessageRow(message, subject) {
   $('.table-inbox tbody').append(
     '<tr>\
       <td>'+getHeader(message.payload.headers, 'From')+'</td>\
       <td>\
         <a href="#message-modal-' + message.id +
-          '" data-toggle="modal" id="message-link-' + message.id+'">' +
-          getHeader(message.payload.headers, 'Subject') +
+          '" data-toggle="modal" id="message-link-' + message.id+'">' + subject +
         '</a>\
       </td>\
       <td>'+getHeader(message.payload.headers, 'Date')+'</td>\

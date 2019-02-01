@@ -191,7 +191,8 @@ function getLink(message) {
   let body = getBody(message.payload);
   let urls = getUrlsFromHtml(body);
   let urlCoverArt = urls.find(url=>url.includes('alert_cover_art'));
-  console.log(urlCoverArt);
+  let productId = urlCoverArt.match(/\d+-\d+/g)[0];
+  console.log(productId);
   return urlCoverArt;
 }
 

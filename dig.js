@@ -28,7 +28,7 @@ function handleAuthClick() {
 }
 
 function handleAuthResult(authResult) {
-  console.log('handleAuthResult', authResult);
+  console.log('handleAuthResult');
   if(authResult && !authResult.error) {
     loadGmailApi();
     $('#authorize-button').remove();
@@ -48,6 +48,7 @@ function loadGmailApi() {
   });
 }
 
+
 function onMessagesLoad(loadedMessages) {
   console.log('onMessagesLoad', loadedMessages.length);
   _messages = loadedMessages.slice(0,1);
@@ -63,6 +64,7 @@ function onMessagesLoad(loadedMessages) {
   });
 }
 
+
 function onMessageLoad(message) {
   /* console.log(message); */
   let headers = message.payload.headers;
@@ -75,6 +77,7 @@ function onMessageLoad(message) {
     trashDuplicate(message, subject);
   }
 }
+
 
 function trashDuplicate(message, subject) {
   var messageRequest = gapi.client.gmail.users.messages.trash({
@@ -118,10 +121,10 @@ function loadMessages(userId, query, callback) {
 }
 
 
-function appendMessageRow(message, subject) {
+async function appendMessageRow(message, subject) {
   $('.table-inbox tbody').append(
     '<tr>\
-      <td>' + getAudioLinks(message) + '</td>\
+      <td>' + await getAudioLinks(message) + '</td>\
       <td>\
         <a href="#message-modal-' + message.id +
           '" data-toggle="modal" id="message-link-' + message.id+'">' + subject +
@@ -195,7 +198,7 @@ function getProductId(message) {
 
 
 async function getAudioUrls(message) {
-  console.log('getAudioUrls', message);
+  console.log('getAudioUrls');
   let id = getProductId(message);
   let audioUrls = [];
 
@@ -204,7 +207,7 @@ async function getAudioUrls(message) {
     for (var t=1; t<50; t++) {
       let track = String('0'+t).slice(-2);
       let url = `https://www.juno.co.uk/MP3/SF${id}-${side}-${track}.mp3`;
-      let exists = await audioExists(url, s*100+t*50);
+      let exists = await audioExists(url, s*501+t*150);
       if (exists) {
         audioUrls.push(url);
       } else {
@@ -218,20 +221,14 @@ async function getAudioUrls(message) {
 
 
 async function getAudioLinks(message) {
-  let id = getProductId(message);
-  let url = 'http://juno.co.uk/products/'+id;
-  let urls = [];
-  
-  /* let urls = await getAudioUrls(message);
+  let urls = await getAudioUrls(message);
   console.log(urls);
   var html = '';
   for (let i=0; i<urls.length; i++) {
     let aTag = '<a href="' + urls[i] + '">' + (i+1) + '</a> ';
-    console.log(aTag);
     html += aTag;
   }
-  console.log(html);
-  return html; */
+  return html;
 };
 
 
@@ -240,7 +237,7 @@ async function audioExists(url, delay) {
 
   let promise = new Promise(resolve => {
     sound.oncanplay = ()=>{ setTimeout(()=>{resolve(1)}, delay?delay:0) }
-    sound.onerror = ()=>{ resolve(0) }
+    sound.onerror = ()=>{ setTimeout(()=>{resolve(0)}, delay?delay:0) }
   });
 
   let result = await promise;

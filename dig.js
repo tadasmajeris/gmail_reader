@@ -51,7 +51,7 @@ function loadGmailApi() {
 
 function onMessagesLoad(loadedMessages) {
   console.log('onMessagesLoad', loadedMessages.length);
-  _messages = loadedMessages.slice(0,3);
+  _messages = loadedMessages.slice(0,1);
   /* _messages = loadedMessages; */
 
   $.each(_messages, function() {
@@ -124,7 +124,7 @@ function loadMessages(userId, query, callback) {
 function appendMessageRow(message, subject) {
   $('.table-inbox tbody').append(
     '<tr>\
-      <td><a href="'+getLink(message)+'">Product</a></td>\
+      <td><a href="'+getAudioUrls(message)[0]+'">Product</a></td>\
       <td>\
         <a href="#message-modal-' + message.id +
           '" data-toggle="modal" id="message-link-' + message.id+'">' + subject +
@@ -188,15 +188,37 @@ function getBody(message) {
 }
 
 
-function getLink(message) {
+function getProductId(message) {
   let body = getBody(message.payload);
   let urls = getUrlsFromHtml(body);
   let urlCoverArt = urls.find(url=>url.includes('alert_cover_art'));
   let productId = urlCoverArt.match(/\d+-\d+/g)[0];
-  /* console.log(productId); */
-  audioExists('https://www.juno.co.uk/MP3/SF'+productId+'-01-01.mp3');
-  return urlCoverArt;
+  return productId;
 }
+
+
+async function getAudioUrls(message) {
+  console.log('getAudioUrls', message);
+  let id = getProductId(message);
+  let audioUrls = [];
+
+  for (var s=1; s<10; s++) {
+    let side = String('0'+s).slice(-2);
+    for (var t=1; t<50; t++) {
+      let track = String('0'+t).slice(-2);
+      let url = `https://www.juno.co.uk/MP3/SF${id}-${side}-${track}.mp3`;
+      let exists = await audioExists(url);
+      if (exists) {
+        audioUrls += url;
+      } else {
+        if (t===1) return audioUrls;
+        break;
+      }
+    }
+  }
+  console.log(audioUrls);
+  return audioUrls;
+};
 
 
 async function audioExists(url) {

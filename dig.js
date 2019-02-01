@@ -187,14 +187,30 @@ function getBody(message) {
   return decodeURIComponent(escape(window.atob(encodedBody)));
 }
 
+
 function getLink(message) {
   let body = getBody(message.payload);
   let urls = getUrlsFromHtml(body);
   let urlCoverArt = urls.find(url=>url.includes('alert_cover_art'));
   let productId = urlCoverArt.match(/\d+-\d+/g)[0];
-  console.log(productId);
+  /* console.log(productId); */
+  audioExists('https://www.juno.co.uk/MP3/SF'+productId+'-01-01.mp3');
   return urlCoverArt;
 }
+
+
+async function audioExists(url) {
+  var sound = new Audio(url);
+
+  let promise = new Promise(resolve => {
+    sound.oncanplay = ()=>{ resolve(1) }
+    sound.onerror = ()=>{ resolve(0) }
+  });
+
+  let result = await promise;
+  console.log(result, url);
+  return result;
+};
 
 
 function getUrlsFromHtml(html) {

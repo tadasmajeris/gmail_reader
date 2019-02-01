@@ -124,7 +124,7 @@ function loadMessages(userId, query, callback) {
 function appendMessageRow(message, subject) {
   $('.table-inbox tbody').append(
     '<tr>\
-      <td><a href="'+getAudioUrls(message)[0]+'">Product</a></td>\
+      <td>' + getAudioLinks(message) + '</td>\
       <td>\
         <a href="#message-modal-' + message.id +
           '" data-toggle="modal" id="message-link-' + message.id+'">' + subject +
@@ -207,25 +207,38 @@ async function getAudioUrls(message) {
     for (var t=1; t<50; t++) {
       let track = String('0'+t).slice(-2);
       let url = `https://www.juno.co.uk/MP3/SF${id}-${side}-${track}.mp3`;
-      let exists = await audioExists(url);
+      let exists = await audioExists(url, s*100+t*50);
       if (exists) {
-        audioUrls += url;
+        audioUrls.push(url);
       } else {
         if (t===1) return audioUrls;
         break;
       }
     }
   }
-  console.log(audioUrls);
   return audioUrls;
 };
 
 
-async function audioExists(url) {
+async function getAudioLinks(message) {
+  let urls = await getAudioUrls(message);
+  console.log(urls);
+  var html = '';
+  for (let i=0; i<urls.length; i++) {
+    let aTag = '<a href="' + urls[i] + '">' + (i+1) + '</a> ';
+    console.log(aTag);
+    html += aTag;
+  }
+  console.log(html);
+  return html;
+};
+
+
+async function audioExists(url, delay) {
   var sound = new Audio(url);
 
   let promise = new Promise(resolve => {
-    sound.oncanplay = ()=>{ resolve(1) }
+    sound.oncanplay = ()=>{ setTimeout(()=>{resolve(1)}, delay?delay:0) }
     sound.onerror = ()=>{ resolve(0) }
   });
 

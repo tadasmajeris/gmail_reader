@@ -1,6 +1,9 @@
 var scopes = 'https://www.googleapis.com/auth/gmail.modify';
 var _messages = [];
 var _subjects = [];
+var _loading = false;
+var _ready = true; // ready for next email to start checking urls
+var _interval;
 
 function handleClientLoad() {
   console.log('handleClientLoad');
@@ -49,20 +52,32 @@ function loadGmailApi() {
 }
 
 
-function onMessagesLoad(loadedMessages) {
+async function onMessagesLoad(loadedMessages) {
   console.log('onMessagesLoad', loadedMessages.length);
-  _messages = loadedMessages.slice(0,1);
+  _messages = loadedMessages.slice(0,3);
   /* _messages = loadedMessages; */
 
-  $.each(_messages, function() {
-    var messageRequest = gapi.client.gmail.users.messages.get({
-      'userId': 'me',
-      'id': this.id,
-    });
-
-    messageRequest.execute(onMessageLoad);
-  });
+  var i = -1;
+  _interval = setInterval(()=>{
+    if (i+1>=_messages.length) clearInterval(_interval);
+    if (_ready && !_loading) {
+      i++;
+      _loading = 1;
+      _ready = 0;
+      loadOneMessage(_messages[i]);
+    }
+  }, 500);
 }
+
+
+function loadOneMessage(message) {
+  var messageRequest = gapi.client.gmail.users.messages.get({
+    'userId': 'me',
+    'id': message.id,
+  });
+
+  messageRequest.execute(onMessageLoad);
+};
 
 
 function onMessageLoad(message) {
@@ -207,7 +222,7 @@ async function getAudioUrls(message) {
     for (var t=1; t<50; t++) {
       let track = String('0'+t).slice(-2);
       let url = `https://www.juno.co.uk/MP3/SF${id}-${side}-${track}.mp3`;
-      let exists = await audioExists(url, s*501+t*150);
+      let exists = await audioExists(url, s*501+t*201);
       if (exists) {
         audioUrls.push(url);
       } else {
@@ -223,6 +238,7 @@ async function getAudioUrls(message) {
 async function getAudioLinks(message) {
   let urls = await getAudioUrls(message);
   console.log(urls);
+  _ready = 1; _loading = 0;
   var html = '';
   for (let i=0; i<urls.length; i++) {
     let aTag = '<a href="' + urls[i] + '">' + (i+1) + '</a> ';

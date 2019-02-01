@@ -51,7 +51,7 @@ function loadGmailApi() {
 
 function onMessagesLoad(loadedMessages) {
   console.log('onMessagesLoad', loadedMessages.length);
-  _messages = loadedMessages.slice(0,100);
+  _messages = loadedMessages.slice(0,3);
   /* _messages = loadedMessages; */
 
   $.each(_messages, function() {
@@ -124,7 +124,7 @@ function loadMessages(userId, query, callback) {
 function appendMessageRow(message, subject) {
   $('.table-inbox tbody').append(
     '<tr>\
-      <td>'+getHeader(message.payload.headers, 'From')+'</td>\
+      <td><a href="'+getLink(message)+'">Product</a></td>\
       <td>\
         <a href="#message-modal-' + message.id +
           '" data-toggle="modal" id="message-link-' + message.id+'">' + subject +
@@ -185,6 +185,28 @@ function getBody(message) {
   }
   encodedBody = encodedBody.replace(/-/g, '+').replace(/_/g, '/').replace(/\s/g, '');
   return decodeURIComponent(escape(window.atob(encodedBody)));
+}
+
+function getLink(message) {
+  let body = getBody(message.payload);
+  let urls = getUrlsFromHtml(body);
+  let urlCoverArt = urls.find(url=>url.includes('alert_cover_art'));
+  console.log(urlCoverArt);
+  return urlCoverArt;
+}
+
+
+function getUrlsFromHtml(html) {
+  var doc = document.createElement("html");
+  doc.innerHTML = html;
+  var links = doc.getElementsByTagName("a")
+  var urls = [];
+
+  for (var i=0; i<links.length; i++) {
+    urls.push(links[i].getAttribute("href"));
+  }
+
+  return urls;
 }
 
 

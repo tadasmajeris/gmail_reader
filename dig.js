@@ -1,5 +1,4 @@
 var scopes = 'https://www.googleapis.com/auth/gmail.modify';
-const cheerio = require('cheerio')
 var _messages = [];
 var _subjects = [];
 
@@ -49,7 +48,6 @@ function loadGmailApi() {
   });
 }
 
-
 function onMessagesLoad(loadedMessages) {
   console.log('onMessagesLoad', loadedMessages.length);
   _messages = loadedMessages.slice(0,1);
@@ -65,7 +63,6 @@ function onMessagesLoad(loadedMessages) {
   });
 }
 
-
 function onMessageLoad(message) {
   /* console.log(message); */
   let headers = message.payload.headers;
@@ -78,7 +75,6 @@ function onMessageLoad(message) {
     trashDuplicate(message, subject);
   }
 }
-
 
 function trashDuplicate(message, subject) {
   var messageRequest = gapi.client.gmail.users.messages.trash({
@@ -224,10 +220,8 @@ async function getAudioUrls(message) {
 async function getAudioLinks(message) {
   let id = getProductId(message);
   let url = 'http://juno.co.uk/products/'+id;
-  let $$ = cheerio.load(url);
   let urls = [];
-  console.log($$('.btn-xs.btn-listen'));
-
+  
   /* let urls = await getAudioUrls(message);
   console.log(urls);
   var html = '';

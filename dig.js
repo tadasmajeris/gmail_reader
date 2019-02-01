@@ -1,4 +1,5 @@
 var scopes = 'https://www.googleapis.com/auth/gmail.modify';
+const cheerio = require('cheerio')
 var _messages = [];
 var _subjects = [];
 
@@ -221,7 +222,13 @@ async function getAudioUrls(message) {
 
 
 async function getAudioLinks(message) {
-  let urls = await getAudioUrls(message);
+  let id = getProductId(message);
+  let url = 'http://juno.co.uk/products/'+id;
+  let $$ = cheerio.load(url);
+  let urls = [];
+  console.log($$('.btn-xs.btn-listen'));
+
+  /* let urls = await getAudioUrls(message);
   console.log(urls);
   var html = '';
   for (let i=0; i<urls.length; i++) {
@@ -230,7 +237,7 @@ async function getAudioLinks(message) {
     html += aTag;
   }
   console.log(html);
-  return html;
+  return html; */
 };
 
 

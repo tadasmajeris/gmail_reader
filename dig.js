@@ -4,6 +4,7 @@ var _subjects = [];
 var _loading = false;
 var _ready = true; // ready for next email to start checking urls
 var _interval;
+const MAX_EMAILS = 2;
 
 function handleClientLoad() {
   console.log('handleClientLoad');
@@ -32,8 +33,28 @@ function handleAuthClick() {
 
 function handleDownloadClick() {
   console.log('handleDownloadClick');
+  var delay = 0;
 
+  for (let m=0; m<_messages.length; m++) {
+    for (let t=0; t<_messages[m].audioUrls.length; t++) {
+
+      setTimeout(()=>{
+        window.open(_messages[m].audioUrls[t]);
+        let isLast = (m == _messages.length-1) && (t == _messages[m].audioUrls.length-1);
+        if (isLast) afterLastDownload();
+      }, delay);
+
+      delay += 2001;
+    }
+  }
 }
+
+
+function afterLastDownload() {
+  console.log('afterLastDownload');
+  _messages.forEach(m=>trashMessage(id));
+};
+
 
 function handleAuthResult(authResult) {
   console.log('handleAuthResult');
@@ -59,7 +80,7 @@ function loadGmailApi() {
 
 async function onMessagesLoad(loadedMessages) {
   console.log('onMessagesLoad', loadedMessages.length);
-  _messages = loadedMessages.slice(0, 2);
+  _messages = loadedMessages.slice(0, MAX_EMAILS);
   /* _messages = loadedMessages; */
 
   var i = -1;
@@ -123,6 +144,15 @@ function trashDuplicate(message, subject) {
       });
       console.log('deleted: ', subject);
     }
+  });
+}
+
+
+function trashMessage(id) {
+  var messageRequest = gapi.client.gmail.users.messages.trash({userId: 'me', id });
+
+  messageRequest.execute(r=>{
+    if (!('error' in r)) console.log('deleted: ', id);
   });
 }
 
@@ -259,7 +289,7 @@ async function getAudioLinks(message) {
   _ready = 1; _loading = 0;
   var html = '';
   for (let i=0; i<urls.length; i++) {
-    let aTag = '<a href="' + urls[i] + '">' + (i+1) + '</a> ';
+    let aTag = '<a href="' + urls[i] + '" download target="_blank" data-id="' + message.id + '">' + (i+1) + '</a> ';
     html += aTag;
   }
   return html;

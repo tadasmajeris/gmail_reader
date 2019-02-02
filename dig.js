@@ -4,7 +4,7 @@ var _subjects = [];
 var _loading = false;
 var _ready = true; // ready for next email to start checking urls
 var _interval;
-const MAX_EMAILS = 2;
+const MAX_EMAILS = 10;
 
 function handleClientLoad() {
   console.log('handleClientLoad');
@@ -52,7 +52,7 @@ function handleDownloadClick() {
 
 function afterLastDownload() {
   console.log('afterLastDownload');
-  _messages.forEach(m=>trashMessage(id));
+  _messages.forEach(m=>trashMessage(m.id));
 };
 
 

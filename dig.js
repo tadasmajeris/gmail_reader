@@ -54,7 +54,7 @@ function loadGmailApi() {
 
 async function onMessagesLoad(loadedMessages) {
   console.log('onMessagesLoad', loadedMessages.length);
-  _messages = loadedMessages.slice(0,3);
+  _messages = loadedMessages.slice(0,7);
   /* _messages = loadedMessages; */
 
   var i = -1;
@@ -250,10 +250,17 @@ async function getAudioLinks(message) {
 
 async function audioExists(url, delay) {
   var sound = new Audio(url);
+  delay = delay ? delay : 0;
 
   let promise = new Promise(resolve => {
-    sound.oncanplay = ()=>{ setTimeout(()=>{resolve(1)}, delay?delay:0) }
-    sound.onerror = ()=>{ setTimeout(()=>{resolve(0)}, delay?delay:0) }
+    sound.oncanplay = ()=>{ setTimeout(()=>{resolve(1)}, delay) }
+    sound.onerror = (e)=>{
+      if (e.target.error.message.slice(0,3) == '404') {
+        setTimeout(()=>{resolve(0)}, delay);
+      } else {
+        setTimeout(()=>{resolve(1)}, delay);
+      }
+    }
   });
 
   let result = await promise;

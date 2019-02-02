@@ -30,6 +30,11 @@ function handleAuthClick() {
   return false;
 }
 
+function handleDownloadClick() {
+  console.log('handleDownloadClick');
+
+}
+
 function handleAuthResult(authResult) {
   console.log('handleAuthResult');
   if(authResult && !authResult.error) {
@@ -54,13 +59,15 @@ function loadGmailApi() {
 
 async function onMessagesLoad(loadedMessages) {
   console.log('onMessagesLoad', loadedMessages.length);
-  _messages = loadedMessages.slice(0,7);
+  _messages = loadedMessages.slice(0, 2);
   /* _messages = loadedMessages; */
 
   var i = -1;
   _interval = setInterval(()=>{
-    if (i+1>=_messages.length) clearInterval(_interval);
+
     if (_ready && !_loading) {
+      if (i+1 >= _messages.length) return enableDownload();
+
       i++;
       _loading = 1;
       _ready = 0;
@@ -68,6 +75,15 @@ async function onMessagesLoad(loadedMessages) {
     }
   }, 500);
 }
+
+
+function enableDownload() {
+  clearInterval(_interval);
+  $('#download-button').removeClass("hidden");
+  $('#download-button').on('click', function(){
+    handleDownloadClick();
+  });
+};
 
 
 function loadOneMessage(message) {
@@ -237,7 +253,9 @@ async function getAudioUrls(message) {
 
 async function getAudioLinks(message) {
   let urls = await getAudioUrls(message);
-  console.log(urls);
+  messageToUpdate = _messages.find(m => m.id==message.id);
+  messageToUpdate.audioUrls = urls;
+
   _ready = 1; _loading = 0;
   var html = '';
   for (let i=0; i<urls.length; i++) {

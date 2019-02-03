@@ -4,7 +4,7 @@ var _subjects = [];
 var _loading = false;
 var _ready = true; // ready for next email to start checking urls
 var _interval;
-const MAX_EMAILS = 10;
+const MAX_EMAILS = 50;
 
 function handleClientLoad() {
   console.log('handleClientLoad');
@@ -44,7 +44,7 @@ function handleDownloadClick() {
         if (isLast) afterLastDownload();
       }, delay);
 
-      delay += 2001;
+      delay += 2555;
     }
   }
 }
@@ -52,7 +52,11 @@ function handleDownloadClick() {
 
 function afterLastDownload() {
   console.log('afterLastDownload');
-  _messages.forEach(m=>trashMessage(m.id));
+  let delay = 0;
+  _messages.forEach((m,i)=>{
+    setTimeout(()=>{trashMessage(m.id)}, delay);
+    delay += 500;
+  });
 };
 
 
@@ -152,7 +156,11 @@ function trashMessage(id) {
   var messageRequest = gapi.client.gmail.users.messages.trash({userId: 'me', id });
 
   messageRequest.execute(r=>{
-    if (!('error' in r)) console.log('deleted: ', id);
+    if (!('error' in r)) {
+      console.log('deleted: ', id);
+    } else {
+      console.error(r);
+    }
   });
 }
 

@@ -44,7 +44,7 @@ function handleDownloadClick() {
         if (isLast) afterLastDownload();
       }, delay);
 
-      delay += 2555;
+      delay += 2666;
     }
   }
 }
@@ -270,13 +270,15 @@ async function getAudioUrls(message) {
   console.log('getAudioUrls');
   let id = getProductId(message);
   let audioUrls = [];
+  let delay = 0;
 
   for (var s=1; s<10; s++) {
     let side = String('0'+s).slice(-2);
     for (var t=1; t<50; t++) {
       let track = String('0'+t).slice(-2);
       let url = `https://www.juno.co.uk/MP3/SF${id}-${side}-${track}.mp3`;
-      let exists = await audioExists(url, s*501+t*201);
+      let exists = await audioExists(url, delay);
+      delay += 666;
       if (exists) {
         audioUrls.push(url);
       } else {

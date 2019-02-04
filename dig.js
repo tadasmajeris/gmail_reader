@@ -4,7 +4,7 @@ var _subjects = [];
 var _loading = false;
 var _ready = true; // ready for next email to start checking urls
 var _interval;
-const MAX_EMAILS = 5;
+const MAX_EMAILS = 1;
 
 function handleClientLoad() {
   console.log('handleClientLoad');
@@ -85,7 +85,7 @@ function loadGmailApi() {
 async function onMessagesLoad(loadedMessages) {
   console.log('onMessagesLoad', loadedMessages.length);
   _messages = loadedMessages.slice(0, MAX_EMAILS);
-  /* _messages = loadedMessages; */
+  updateCounter();
 
   var i = -1;
   _interval = setInterval(()=>{
@@ -195,7 +195,7 @@ function loadMessages(userId, query, callback) {
 
 
 async function appendMessageRow(message, subject) {
-  $('#loadCount').text($('tr').length-1 + '/' + MAX_EMAILS);
+
   $('.table-inbox tbody').append(
     '<tr>\
       <td>' + await getAudioLinks(message) + '</td>\
@@ -232,11 +232,18 @@ async function appendMessageRow(message, subject) {
     </div>'
   );
 
+  updateCounter();
+
   $('#message-link-'+message.id).on('click', function(){
     var ifrm = $('#message-iframe-'+message.id)[0].contentWindow.document;
     $('body', ifrm).html(getBody(message.payload));
   });
 }
+
+
+function updateCounter() {
+  $('#loadCount').text($('tr').length-1 + '/' + MAX_EMAILS);
+};
 
 
 function getHeader(headers, index) {
@@ -273,8 +280,10 @@ function getProductId(message) {
 
 function getAudioCount(message) {
   let body = getBody(message.payload);
-  let audioCount = $(body).find('img[alt="Listen"]').length;
-  return audioCount;
+  let listenButtonCount = $(body).find('img[alt="Listen"]').length;
+  let moreTracks = body.match(/and \d+ more/g);
+  moreTracks = moreTracks ? moreTracks[0].match(/\d+/g)[0] : 0;
+  return listenButtonCount + moreTracks;
 }
 
 

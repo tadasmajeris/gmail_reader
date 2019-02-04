@@ -4,7 +4,7 @@ var _subjects = [];
 var _loading = false;
 var _ready = true; // ready for next email to start checking urls
 var _interval;
-const MAX_EMAILS = 100;
+const MAX_EMAILS = 5;
 
 function handleClientLoad() {
   console.log('handleClientLoad');
@@ -123,7 +123,10 @@ function loadOneMessage(message) {
 
 function onMessageLoad(message) {
   /* console.log(message); */
-  if (!message.payload) console.error('onMessageLoad', message);
+  if (!message.payload) {
+    console.error('onMessageLoad', message);
+    return;
+  }
   let headers = message.payload.headers;
   let subject = headers.find(h => h.name == 'Subject').value;
 
@@ -192,6 +195,7 @@ function loadMessages(userId, query, callback) {
 
 
 async function appendMessageRow(message, subject) {
+  $('#loadCount').text($('tr').length-1 + '/' + MAX_EMAILS);
   $('.table-inbox tbody').append(
     '<tr>\
       <td>' + await getAudioLinks(message) + '</td>\
@@ -262,7 +266,7 @@ function getProductId(message) {
   let body = getBody(message.payload);
   let urls = getUrlsFromHtml(body);
   let urlCoverArt = urls.find(url=>url.includes('alert_cover_art'));
-  let productId = urlCoverArt.match(/\d+-\d+/g)[0];
+  let productId = urlCoverArt.match(/\d+-\d+\//g)[0].slice(0, -1);
   return productId;
 }
 
@@ -286,7 +290,7 @@ async function getAudioUrls(message, audioCount) {
       let track = String('0'+t).slice(-2);
       let url = `https://www.juno.co.uk/MP3/SF${id}-${side}-${track}.mp3`;
       let exists = await audioExists(url, delay);
-      delay += 777;
+      delay += 888;
       if (exists) {
         audioUrls.push(url);
         if (audioUrls.length == audioCount) return audioUrls;

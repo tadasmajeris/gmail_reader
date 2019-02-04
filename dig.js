@@ -4,7 +4,7 @@ var _subjects = [];
 var _loading = false;
 var _ready = true; // ready for next email to start checking urls
 var _interval;
-const MAX_EMAILS = 50;
+const MAX_EMAILS = 100;
 
 function handleClientLoad() {
   console.log('handleClientLoad');
@@ -123,6 +123,7 @@ function loadOneMessage(message) {
 
 function onMessageLoad(message) {
   /* console.log(message); */
+  if (!message.payload) console.error('onMessageLoad', message);
   let headers = message.payload.headers;
   let subject = headers.find(h => h.name == 'Subject').value;
 
@@ -266,7 +267,14 @@ function getProductId(message) {
 }
 
 
-async function getAudioUrls(message) {
+function getAudioCount(message) {
+  let body = getBody(message.payload);
+  let audioCount = $(body).find('img[alt="Listen"]').length;
+  return audioCount;
+}
+
+
+async function getAudioUrls(message, audioCount) {
   console.log('getAudioUrls');
   let id = getProductId(message);
   let audioUrls = [];
@@ -278,9 +286,10 @@ async function getAudioUrls(message) {
       let track = String('0'+t).slice(-2);
       let url = `https://www.juno.co.uk/MP3/SF${id}-${side}-${track}.mp3`;
       let exists = await audioExists(url, delay);
-      delay += 666;
+      delay += 777;
       if (exists) {
         audioUrls.push(url);
+        if (audioUrls.length == audioCount) return audioUrls;
       } else {
         if (t===1) return audioUrls;
         break;
@@ -292,8 +301,10 @@ async function getAudioUrls(message) {
 
 
 async function getAudioLinks(message) {
-  let urls = await getAudioUrls(message);
-  messageToUpdate = _messages.find(m => m.id==message.id);
+  let messageToUpdate = _messages.find(m => m.id==message.id);
+  messageToUpdate.audioCount = getAudioCount(message);
+
+  let urls = await getAudioUrls(message, messageToUpdate.audioCount);
   messageToUpdate.audioUrls = urls;
 
   _ready = 1; _loading = 0;

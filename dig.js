@@ -273,7 +273,7 @@ function getProductId(message) {
   let body = getBody(message.payload);
   let urls = getUrlsFromHtml(body);
   let urlCoverArt = urls.find(url=>url.includes('alert_cover_art'));
-  let productId = urlCoverArt.match(/\d+-\d+\//g)[0].slice(0, -1);
+  let productId = urlCoverArt.match(/\/\d+-\d+\//g)[0].slice(1,-1);
   return productId;
 }
 

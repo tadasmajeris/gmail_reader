@@ -46,7 +46,7 @@ function handleDownloadClick() {
         if (isLast) afterLastDownload();
       }, delay);
 
-      delay += 2666;
+      delay += 2525;
     }
   }
 }
@@ -54,6 +54,16 @@ function handleDownloadClick() {
 
 function afterLastDownload() {
   console.log('afterLastDownload');
+  gapi.auth.authorize({
+    client_id: clientId,
+    scope: scopes,
+    immediate: false
+  }, trashDownloadedMessages);
+};
+
+
+function trashDownloadedMessages() {
+  console.log('trashDownloadedMessages');
   let delay = 0;
   _messages.forEach((m,i)=>{
     setTimeout(()=>{trashMessage(m.id)}, delay);
@@ -79,7 +89,7 @@ function handleAuthResult(authResult) {
 function loadGmailApi() {
   console.log('loadGmailApi');
   gapi.client.load('gmail', 'v1', ()=>{
-    loadMessages('me', 'from:subscriptions', onMessagesLoad);
+    loadMessages('me', 'from:subscriptions@lists.juno.co.uk', onMessagesLoad);
   });
 }
 

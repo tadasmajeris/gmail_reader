@@ -4,7 +4,9 @@ var _subjects = [];
 var _loading = false;
 var _ready = true; // ready for next email to start checking urls
 var _interval;
-const MAX_EMAILS = 1;
+var _messageToReload;
+var _sound;
+const MAX_EMAILS = 100;
 
 function handleClientLoad() {
   console.log('handleClientLoad');
@@ -87,6 +89,8 @@ async function onMessagesLoad(loadedMessages) {
   _messages = loadedMessages.slice(0, MAX_EMAILS);
   updateCounter();
 
+  _sound = new Audio();
+
   var i = -1;
   _interval = setInterval(()=>{
 
@@ -117,7 +121,14 @@ function loadOneMessage(message) {
     'id': message.id,
   });
 
+  _messageToReload = message;
   messageRequest.execute(onMessageLoad);
+};
+
+
+function reloadMessage() {
+  console.log('reloadMessage');
+  loadOneMessage(_messageToReload);
 };
 
 
@@ -125,6 +136,11 @@ function onMessageLoad(message) {
   /* console.log(message); */
   if (!message.payload) {
     console.error('onMessageLoad', message);
+    gapi.auth.authorize({
+      client_id: clientId,
+      scope: scopes,
+      immediate: false
+    }, reloadMessage);
     return;
   }
   let headers = message.payload.headers;
@@ -299,7 +315,7 @@ async function getAudioUrls(message, audioCount) {
       let track = String('0'+t).slice(-2);
       let url = `https://www.juno.co.uk/MP3/SF${id}-${side}-${track}.mp3`;
       let exists = await audioExists(url, delay);
-      delay += 888;
+      delay += 700 - t+s;
       if (exists) {
         audioUrls.push(url);
         if (audioUrls.length == audioCount) return audioUrls;
@@ -331,17 +347,13 @@ async function getAudioLinks(message) {
 
 
 async function audioExists(url, delay) {
-  var sound = new Audio(url);
-  delay = delay ? delay : 0;
+  _sound.src = url;
 
   let promise = new Promise(resolve => {
-    sound.oncanplay = ()=>{ setTimeout(()=>{resolve(1)}, delay) }
-    sound.onerror = (e)=>{
-      if (e.target.error.message.slice(0,3) == '404') {
-        setTimeout(()=>{resolve(0)}, delay);
-      } else {
-        setTimeout(()=>{resolve(1)}, delay);
-      }
+    _sound.onprogress = ()=>{ resolve(1) }
+    _sound.onerror = (e)=>{
+      let noExist = e.target.error.message.slice(0,3) == '404';
+      resolve(noExist ? 0 : 1);
     }
   });
 
